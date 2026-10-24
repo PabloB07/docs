@@ -2,7 +2,10 @@ import type { RemarkPlugin } from "@astrojs/markdown-remark";
 import { deadOrAlive } from "dead-or-alive";
 import { visit } from "unist-util-visit";
 
-const CI = Boolean(process.env.CI);
+// Link checking is enabled in CI to avoid rate limiting during local development.
+// Note `process.env.CI` can be the string "false" (e.g. when explicitly disabled),
+// which would otherwise be truthy here.
+const CI = Boolean(process.env.CI) && process.env.CI !== "false";
 
 // replaces special Markdown links with Javadoc URLs
 // link format: jd:<javadoc name>[:<module name>][:<fully qualified class name; . as package separator, $ for inner>]
@@ -65,6 +68,15 @@ interface ParseResult {
   ref?: string;
 }
 
+// Keep the number of simultaneous requests to the external Javadoc sites low.
+// Firing all checks at once gets them rate-limited or makes them time out, which
+// `dead-or-alive` reports as a dead link.
+const MAX_CONCURRENT_CHECKS = 6;
+
+// `dead-or-alive` defaults (3s timeout, 1 retry) are too aggressive for a burst of checks.
+const CHECK_TIMEOUT = 15_000;
+const CHECK_RETRIES = 3;
+
 const parse = async (url: string, { targets }: Options): Promise<ParseResult> => {
   const match = /^jd:(.+?)(?::(.+?))?(?::(.+?))?$/.exec(url);
   if (!match) {
@@ -95,6 +107,8 @@ const parse = async (url: string, { targets }: Options): Promise<ParseResult> =>
     const result = await deadOrAlive(parsed, {
       findUrls: false,
       followMetaHttpEquiv: false,
+      timeout: CHECK_TIMEOUT,
+      maxRetries: CHECK_RETRIES,
       userAgent: "PaperMC/docs (https://docs.papermc.io)",
     });
     if (result.status !== "alive") {
@@ -106,11 +120,48 @@ const parse = async (url: string, { targets }: Options): Promise<ParseResult> =>
 };
 
 const plugin: RemarkPlugin = (options: Options) => {
+  // Cache checks per link so repeated links (e.g. shared between locales) only hit
+  // the Javadoc sites once.
+  const cache = new Map<string, Promise<ParseResult>>();
+  let active = 0;
+  const queue: Array<() => void> = [];
+
+  // Run external checks with a bounded concurrency.
+  const withLimit = async <T>(task: () => Promise<T>): Promise<T> => {
+    if (active >= MAX_CONCURRENT_CHECKS) {
+      await new Promise<void>((resolve) => queue.push(resolve));
+    } else {
+      active++;
+    }
+
+    try {
+      return await task();
+    } finally {
+      // Hand the slot to the next queued check, or release it.
+      const next = queue.shift();
+      if (next) {
+        next();
+      } else {
+        active--;
+      }
+    }
+  };
+
+  const parseCached = (url: string): Promise<ParseResult> => {
+    let result = cache.get(url);
+    if (!result) {
+      result = withLimit(() => parse(url, options));
+      cache.set(url, result);
+    }
+
+    return result;
+  };
+
   return async (tree) => {
     const promises: Promise<void>[] = [];
     visit(tree, "link", (node) => {
       promises.push(
-        parse(node.url, options).then(({ url, ref }) => {
+        parseCached(node.url).then(({ url, ref }) => {
           node.url = url ?? node.url;
           if (ref && node.children.length === 0) {
             node.children.push({ type: "inlineCode", value: ref });
