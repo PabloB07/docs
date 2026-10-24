@@ -110,6 +110,11 @@ Es posible que el valor predeterminado mostrado no esté establecido en la propi
 - **valor predeterminado**: `100`
 - **descripción**: Reemplaza la longitud máxima de los mensajes de chat en versiones anteriores a la 1.11. Resulta útil para mods que incorporan en versiones anteriores el límite moderno de `256` caracteres.
 
+#### velocity.pre-shutdown-timeout
+
+- **valor predeterminado**: `10`
+- **descripción**: El tiempo de espera, en segundos, para el manejo de [](jd:velocity:com.velocitypowered.api.event.proxy.ProxyPreShutdownEvent); los jugadores se desconectan cuando transcurre el tiempo de espera.
+
 #### velocity.strictErrorHandling
 
 - **valor predeterminado**: `true`

@@ -142,6 +142,9 @@ Esta es una lista de todos los permisos adicionales de Vanilla.
 | minecraft.debugstick.always       | Permite al usuario usar la debug stick en todos los modos de juego.                                                    | No                                  |
 | minecraft.commandblock            | Permite al usuario usar bloques de comandos.                                                                           | No                                  |
 | minecraft.command.selector        | Permite al usuario usar [selectores de objetivo](https://minecraft.wiki/w/Target_selectors) en los argumentos de comandos. | No                                  |
+| minecraft.command.random.sequence.roll  | Permite al usuario usar secuencias con el subcomando "roll".  | No                                  |
+| minecraft.command.random.sequence.value | Permite al usuario usar secuencias con el subcomando "value". | No                                  |
+| minecraft.command.random.reset          | Permite al usuario restablecer las secuencias.                | No                                  |
 
 ## Permisos de Bukkit
 
