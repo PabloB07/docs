@@ -1,4 +1,4 @@
-# docs [![Discord](https://img.shields.io/discord/289587909051416579.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/papermc) ![Deployment Status](https://img.shields.io/github/deployments/PaperMC/docs/production?label=deployment&logo=github) ![License](https://img.shields.io/github/license/PaperMC/docs)
+# Docs PaperMC ES/EN [![Discord](https://img.shields.io/discord/289587909051416579.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/papermc) ![Deployment Status](https://img.shields.io/github/deployments/PaperMC/docs/production?label=deployment&logo=github) ![License](https://img.shields.io/github/license/PaperMC/docs)
 
 This is the repository for all project documentation under the PaperMC umbrella. Content in this
 repository is published to [docs.papermc.io](https://docs.papermc.io) for viewing.
